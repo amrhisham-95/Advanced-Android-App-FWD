@@ -10,7 +10,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
-import androidx.core.animation.addListener
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.withStyledAttributes
 import kotlin.properties.Delegates
@@ -19,10 +18,12 @@ class LoadingButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
     //determine the width that custom Button will be take it
-    private var widthOfView = 0f
+    private var widthOfView = 0
+
+    private var txtWidth = 0f
 
     //determine the height of the custom rectangle button View
-    private var heightOfView = 0f
+    private var heightOfView = 0
 
     //determine size of the title Text that drawing on the custom Button
     private var sizeOfTheText: Float = resources.getDimension(R.dimen.default_text_size)
@@ -67,7 +68,7 @@ class LoadingButton @JvmOverloads constructor(
                 //during the loading operation, the title of the custom Button is changed to (We are loading)
                 titleOfButton = resources.getString(R.string.button_loading)
                 //that returns a ValueAnimator that animates between float Values (0F and widthSize)
-                animatorTool = ValueAnimator.ofFloat(0f, widthOfView)
+                animatorTool = ValueAnimator.ofFloat(0f, widthOfView.toFloat())
                 //duration is the time that the animation take it
                 animatorTool.duration = 4500
                 //adds a listener to the valueAnimator that are sent update events through the life of an animation
@@ -87,7 +88,7 @@ class LoadingButton @JvmOverloads constructor(
                         //by using sealed class ButtonState that has 3 state, as long as the loading does not finished yet, the animation repeats itself again and again until loading finishes
                         //the previous process will repeating (ButtonState.Loading ->)
                         if (stateOfTheButton == ButtonState.Loading) {
-                            //put the stateofTheButton= loading state that means the nimation of progrss will repeats again
+                            //put the stateOfTheButton= loading state that means the animation of progress will repeats again
                             stateOfTheButton = ButtonState.Loading
                         }
                     }
@@ -95,7 +96,7 @@ class LoadingButton @JvmOverloads constructor(
                 //to start the animation on button
                 animatorTool.start()
             }
-            //if the animation process is completed, cancel the animation and put progressWidth 0F and the circle to 0F also and put the title to (Downloded)
+            //if the animation process is completed, cancel the animation and put progressWidth 0F and the circle to 0F also and put the title to (Downloaded)
             ButtonState.Completed -> {
                 //to cancel the animation when the download is completed
                 animatorTool.cancel()
@@ -127,8 +128,8 @@ class LoadingButton @JvmOverloads constructor(
     private val paintingTool = Paint().apply {
         //smooths out the edges of what is being drawn, but it has no impact on the interior of the shape
         isAntiAlias = true
-        //getting the dimension of the textSize from resources File (100sp)
-        sizeOfTheText = resources.getDimension(R.dimen.default_text_size)
+        //getting the dimension of the textSize from resources File (100sp) - textSize is a built in function
+        textSize = resources.getDimension(R.dimen.default_text_size)
     }
 
 
@@ -147,16 +148,16 @@ class LoadingButton @JvmOverloads constructor(
 
     //to tell android how you want your custom button view to be dependent the layout constraints provided by the parent,and to learn what those layout constraints are.
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val minw: Int = paddingLeft + paddingRight + suggestedMinimumWidth
-        val w: Int = resolveSizeAndState(minw, widthMeasureSpec, 1)
+        val minW: Int = paddingLeft + paddingRight + suggestedMinimumWidth
+        val w: Int = resolveSizeAndState(minW, widthMeasureSpec, 1)
         val h: Int = resolveSizeAndState(
             MeasureSpec.getSize(w),
             heightMeasureSpec,
             0
         )
         //means the layout_Width and layout_height values of the custom Button were set to specific value (w,h)
-        widthOfView = w.toFloat()
-        heightOfView = h.toFloat()
+        widthOfView = w
+        heightOfView = h
         setMeasuredDimension(w, h)
     }
 
@@ -166,7 +167,7 @@ class LoadingButton @JvmOverloads constructor(
         paintingTool.color = backGroundButtonColor
         //there are 5 parameters for drawRec():1st(left side of rectangle)-2nd(top side of rectangle)-3rd(right side of rectangle)-4th(bottom side of rectangle)-5th(painterTool to draw rectangle)
         //put the right side of rectangle equals to widthOfView and put the bottom side equals to heightOfView that means the custom Button will take the height and width of the view
-        canvas?.drawRect(0f, 0f, widthOfView, heightOfView, paintingTool)
+        canvas?.drawRect(0f, 0f, widthOfView.toFloat(), heightOfView.toFloat(), paintingTool)
     }
 
     //designTheButtonTitle function is used to draw the text of the title of customButton and it's background color
@@ -174,13 +175,12 @@ class LoadingButton @JvmOverloads constructor(
         //determine the Color of title
         paintingTool.color = Color.BLACK
 
+        txtWidth = paintingTool.measureText(titleOfButton)
 
-        //there are 4 parameters for drawArc(), 1st-the text,2nd- where the text start on x-axis (i put it at the center of rectangle View by using widthOfView/3)
-        //3rd-where the text start on y-axis ( i put it at the center of rectangle view by using  heightOfView / 2)
         canvas?.drawText(
-            titleOfButton, widthOfView/3,
-            heightOfView / 2 , paintingTool
-        )
+            titleOfButton, widthOfView/2 - txtWidth/2,
+            heightOfView/2 - (paintingTool.descent() + paintingTool.ascent())/2 ,paintingTool)
+
 
     }
 
@@ -192,7 +192,7 @@ class LoadingButton @JvmOverloads constructor(
         //there are 5 parameters for drawRec():1st(left side of rectangle)-2nd(top side of rectangle)-3rd(right side of rectangle)-4th(bottom side of rectangle)-5th(painterTool to draw rectangle)
         //put the left side equals to theWidthOfTheProgress that means the progress animation direction starts from left of rectangle to the right
         //put the top side equals to heightOfView that means the height pf progress Rectangle takes the height of original rectangle
-        canvas?.drawRect(theWidthOfTheProgress, heightOfView, 0f, 0f, paintingTool)
+        canvas?.drawRect(theWidthOfTheProgress, heightOfView.toFloat(), 0f, 0f, paintingTool)
     }
 
     //designTheProgressCircle function is used to draw the progress circle that occurs during the loading operation and it's background color
@@ -201,12 +201,12 @@ class LoadingButton @JvmOverloads constructor(
         //coordination x and y where the progress circle is occurs on the custom Button
         //(2*widthOfView)/3 puts the circle in the 1/3 from the rectangle view at the right on the x axis
         //heightOfView/4 puts the circle at the center of the rectangle view on y axis
-        canvas?.translate((2 * widthOfView) / 3, heightOfView / 4)
+        canvas?.translate((2 * widthOfView.toFloat()) / 3, heightOfView.toFloat() / 4)
         //determine the backgroundColor of progress circle
         paintingTool.color = backGroundButtonColorCircle
         //drawing the progressCircle by using drawArc
         //useCenter (true) that is means include the center of the oval in the arc and close it if it is being stroked
-        //sweepAngle is (theprogressCircle*0.360f) 360 degree is an entire cycle for the circle
+        //sweepAngle is (theProgressCircle*0.360f) 360 degree is an entire cycle for the circle
         //we can change start angle to any value we need to start point angle for example 30 degree the circle will start sweep from 30 degree
         //RectF() to draw the Arc
         canvas?.drawArc(RectF(0f, 0f, 75f, 75f), 0f, theProgressCircle * 0.360f, true, paintingTool)
