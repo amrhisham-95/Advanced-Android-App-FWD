@@ -223,7 +223,7 @@ class MainActivity : AppCompatActivity() {
                 message = y
             )
         )
-        pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT)
+        pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
