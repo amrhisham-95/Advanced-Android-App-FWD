@@ -14,26 +14,25 @@ import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.my3rdappdesign.DetailActivity.Companion.withExtras
 import com.example.my3rdappdesign.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
 
     private var downloadID: Long = 0
+
     //default value of status download
     private var downloadStatus: String = "Failed"
     var positionUrl = ""
     private lateinit var binding: ActivityMainBinding
     private lateinit var notificationManager: NotificationManager
     private lateinit var pendingIntent: PendingIntent
-    private lateinit var action: NotificationCompat.Action
     private var notificationId = 0
-
 
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -66,7 +65,8 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         if (capabilities != null) {
-                            binding.contentMainId.customButton.stateOfTheButton = ButtonState.Loading
+                            binding.contentMainId.customButton.stateOfTheButton =
+                                ButtonState.Loading
                             //passing URL throw a fun download
                             download(URLGlide)
                             //positionUrl variable to determine which URL is used to use it in  the broadcast receiver
@@ -94,7 +94,8 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         if (capabilities != null) {
-                            binding.contentMainId.customButton.stateOfTheButton = ButtonState.Loading
+                            binding.contentMainId.customButton.stateOfTheButton =
+                                ButtonState.Loading
                             download(URLAppLoad)
                             //positionUrl variable to determine which URL is used to use it in  the broadcast receiver
                             positionUrl = URLAppLoad
@@ -121,7 +122,8 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         if (capabilities != null) {
-                            binding.contentMainId.customButton.stateOfTheButton = ButtonState.Loading
+                            binding.contentMainId.customButton.stateOfTheButton =
+                                ButtonState.Loading
                             download(URLRetrofit)
                             //positionUrl variable to determine which URL is used to use it in  the broadcast receiver
                             positionUrl = URLRetrofit
@@ -140,24 +142,39 @@ class MainActivity : AppCompatActivity() {
 
     //To create a Notification when the download is finished , the receiver is sense about the download is finished or not
     private val receiver = object : BroadcastReceiver() {
+        @RequiresApi(Build.VERSION_CODES.M)
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
             if (downloadID == id) {
                 downloadStatus = "Success"
                 binding.contentMainId.customButton.stateOfTheButton = ButtonState.Completed
+                var y: String
                 if (positionUrl == URLGlide) {
                     Toast.makeText(context, "Glide Is Downloaded", Toast.LENGTH_LONG).show()
-                    createNotification(NOTIFICATION_TITLE_GLIDE, NOTIFICATION_DESCRIPTION_GLIDE)
+                    y = downloadStatus
+                    createNotification(
+                        NOTIFICATION_TITLE_GLIDE,
+                        NOTIFICATION_DESCRIPTION_GLIDE,
+                        NOTIFICATION_TITLE_GLIDE,
+                        y
+                    )
                 }
                 if (positionUrl == URLAppLoad) {
                     Toast.makeText(context, "AppLoad Is Downloaded", Toast.LENGTH_LONG).show()
-                    createNotification(NOTIFICATION_TITLE_APPLOAD, NOTIFICATION_DESCRIPTION_APPLOAD)
+                    y = downloadStatus
+                    createNotification(
+                        NOTIFICATION_TITLE_APPLOAD,
+                        NOTIFICATION_DESCRIPTION_APPLOAD,
+                        NOTIFICATION_TITLE_APPLOAD,
+                        y
+                    )
                 }
                 if (positionUrl == URLRetrofit) {
                     Toast.makeText(context, "Retrofit Is Downloaded", Toast.LENGTH_LONG).show()
+                    y = downloadStatus
                     createNotification(
                         NOTIFICATION_TITLE_RETROFIT,
-                        NOTIFICATION_DESCRIPTION_RETROFIT
+                        NOTIFICATION_DESCRIPTION_RETROFIT, NOTIFICATION_TITLE_RETROFIT, y
                     )
                 }
             }
@@ -181,7 +198,8 @@ class MainActivity : AppCompatActivity() {
 
 
     //creating Notification
-    private fun createNotification(title: String, description: String) {
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun createNotification(title: String, description: String, x: String, y: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -200,30 +218,18 @@ class MainActivity : AppCompatActivity() {
 
         //create the intent to move from notification to detail screen
         val intent = Intent(this, DetailActivity::class.java)
-        var x = ""
-        var y = ""
-        when (positionUrl) {
-            URLGlide -> {
-                x = resources.getString(R.string.glideRadioButton)
-                y = downloadStatus
-            }
-            URLAppLoad -> {
-                x = resources.getString(R.string.loadAppRadioButton)
-                y = downloadStatus
-            }
-            URLRetrofit -> {
-                x = resources.getString(R.string.retrofitRadioButton)
-                y = downloadStatus
-            }
-        }
+
         //use putExtras to sending data when press on the button at notification to move to detail screen
         intent.putExtras(
             withExtras(
-                title = x,
-                message = y
+                x, y
             )
         )
-        pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_IMMUTABLE)
+        Log.d("amr", "onCreate: $x + $y")
+
+        @RequiresApi(Build.VERSION_CODES.S)
+        pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
@@ -239,7 +245,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     companion object {
         private const val URLGlide =
             "https://github.com/bumptech/glide/archive/refs/heads/master.zip"
@@ -249,14 +254,25 @@ class MainActivity : AppCompatActivity() {
             "https://github.com/square/retrofit/archive/refs/heads/master.zip"
         private const val CHANNEL_ID = "channelId"
         private const val CHANNEL_Name = "channelName"
-        private const val NOTIFICATION_TITLE_GLIDE = "GLIDE_DOWNLOAD, Image Loading Library By BumpTech"
+        private const val NOTIFICATION_TITLE_GLIDE =
+            "GLIDE_DOWNLOAD, Image Loading Library By BumpTech"
         private const val NOTIFICATION_DESCRIPTION_GLIDE = "The Data From The Glide Is Downloaded"
-        private const val NOTIFICATION_TITLE_APPLOAD = "APPLOAD_DOWNLOAD, Current Repository By Udacity"
+        private const val NOTIFICATION_TITLE_APPLOAD =
+            "APPLOAD_DOWNLOAD, Current Repository By Udacity"
         private const val NOTIFICATION_DESCRIPTION_APPLOAD =
             "The Data From The Appload Is Downloaded"
-        private const val NOTIFICATION_TITLE_RETROFIT = "RETROFIT_DOWNLOAD, Type-Safe HTTP Client For Android And JAVA By Square, Inc"
+        private const val NOTIFICATION_TITLE_RETROFIT =
+            "RETROFIT_DOWNLOAD, Type-Safe HTTP Client For Android And JAVA By Square, Inc"
         private const val NOTIFICATION_DESCRIPTION_RETROFIT =
             "The Data From The Retrofit Is Downloaded"
-    }
 
+
+        fun withExtras(title: String, message: String): Bundle {
+            return Bundle().apply {
+                putString("Title", title)
+                putString("Status", message)
+            }
+        }
+
+    }
 }

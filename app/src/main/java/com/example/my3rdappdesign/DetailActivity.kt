@@ -23,11 +23,11 @@ class DetailActivity : AppCompatActivity() {
         val extras = intent.extras
         extras?.let {
             notificationTitle = it.getString("Title")
-
             notificationMessage = it.getString("Status")
+            Log.d("amr", "onCreate: $notificationTitle + $notificationMessage")
         }
 
-        //dispalying the title & message on the datail screen
+        //displaying the title & message on the detail screen
         binding.contentDetailId.apply {
             TextTitle.text=notificationTitle
             TextStatus.text=notificationMessage
@@ -40,15 +40,5 @@ class DetailActivity : AppCompatActivity() {
 
         }
 
-
-    //passing DATA (TITLE AND STATUS)
-    companion object {
-        fun withExtras(title: String, message: String): Bundle {
-            return Bundle().apply {
-                putString("Title", title)
-                putString("Status", message)
-            }
-        }
-    }
 
 }
