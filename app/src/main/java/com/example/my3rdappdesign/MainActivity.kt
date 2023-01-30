@@ -12,11 +12,11 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.my3rdappdesign.databinding.ActivityMainBinding
@@ -228,7 +228,8 @@ class MainActivity : AppCompatActivity() {
         Log.d("amr", "onCreate: $x + $y")
 
         @RequiresApi(Build.VERSION_CODES.S)
-        pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_MUTABLE)
+        pendingIntent = PendingIntent.getActivity(this, 0, intent,
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
